@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+{% load netops_tags %}
+
+{% block title %}Catalogue des procédures — NetOps Pro Hub{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+
+  <!-- Page Header -->
+  <div class="page-header d-flex align-items-center justify-content-between flex-wrap gap-2">
+    <div>
+      <h1 class="page-title">
+        <i class="bi bi-collection me-2 text-primary"></i>Catalogue des procédures
+      </h1>
+      <p class="text-muted mb-0 small mt-1">
+        {% if total_results %}
+          <strong>{{ total_results }}</strong> procédure{{ total_results|pluralize }} trouvée{{ total_results|pluralize }}
+        {% else %}
+          Aucun résultat correspondant aux filtres
+        {% endif %}
+      </p>
+    </div>
+    {% if user.is_authenticated %}
+    <a href="/admin/procedures/procedure/add/" class="btn btn-primary btn-sm">
+      <i class="bi bi-plus-lg me-1"></i>Nouvelle procédure
+    </a>
+    {% endif %}
+  </div>
+
+  <div class="row g-4">
+
+    <!-- Filtres -->
+    <div class="col-lg-3">
+      <div class="sticky-top" style="top:78px;">
+        {% include 'partials/_filters.html' with form=filter_form categories=categories %}
+      </div>
+    </div>
+
+    <!-- Résultats -->
+    <div class="col-lg-9">
+
+      {% if procedures %}
+      <div class="row g-3">
+        {% for procedure in procedures %}
+        <div class="col-md-6 col-xl-4">
+          {% include 'partials/_procedure_card.html' %}
+        </div>
+        {% endfor %}
+      </div>
+
+      {% if is_paginated %}
+      <nav class="mt-4" aria-label="Pagination">
+        <ul class="pagination justify-content-center mb-0">
+          {% if page_obj.has_previous %}
+          <li class="page-item">
+            <a class="page-link" href="?{% if request.GET.q %}q={{ request.GET.q }}&{% endif %}page={{ page_obj.previous_page_number }}">
+              <i class="bi bi-chevron-left"></i>
+            </a>
+          </li>
+          {% endif %}
+          {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+            <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+            <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+            {% endif %}
+          {% endfor %}
+          {% if page_obj.has_next %}
+          <li class="page-item">
+            <a class="page-link" href="?{% if request.GET.q %}q={{ request.GET.q }}&{% endif %}page={{ page_obj.next_page_number }}">
+              <i class="bi bi-chevron-right"></i>
+            </a>
+          </li>
+          {% endif %}
+        </ul>
+      </nav>
+      {% endif %}
+
+      {% else %}
+      <div class="card shadow-sm">
+        <div class="card-body text-center py-5">
+          <i class="bi bi-search display-3 text-muted d-block mb-3 opacity-50"></i>
+          <h5 class="text-muted fw-normal">Aucune procédure trouvée</h5>
+          <p class="text-muted small">Modifiez vos critères ou réinitialisez les filtres.</p>
+          <a href="{% url 'procedures:list' %}" class="btn btn-outline-primary btn-sm mt-1">
+            <i class="bi bi-x-circle me-1"></i>Réinitialiser les filtres
+          </a>
+        </div>
+      </div>
+      {% endif %}
+
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,221 @@
+{% extends 'base.html' %}
+{% load netops_tags %}
+
+{% block title %}{{ doc.title }} — Documentation Center — NetOps Pro Hub{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+
+  <!-- Breadcrumb -->
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb mb-0" style="font-size:.82rem;">
+      <li class="breadcrumb-item"><a href="{% url 'core:dashboard' %}" class="text-decoration-none text-muted">Dashboard</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'docs:list' %}" class="text-decoration-none text-muted">Documentation</a></li>
+      <li class="breadcrumb-item active text-dark">{{ doc.title }}</li>
+    </ol>
+  </nav>
+
+  <div class="row g-4">
+
+    <!-- Colonne principale -->
+    <div class="col-xl-9">
+
+      <!-- En-tete document -->
+      <div class="card shadow-sm mb-4">
+        <div class="card-body p-4">
+          <div class="d-flex align-items-start gap-3">
+            <div class="doc-type-icon bg-{{ doc.type_color }}-subtle text-{{ doc.type_color }} flex-shrink-0" style="width:52px;height:52px;font-size:1.5rem;border-radius:12px;">
+              <i class="bi {{ doc.type_icon }}"></i>
+            </div>
+            <div class="flex-grow-1">
+              <div class="d-flex flex-wrap gap-2 mb-2">
+                <span class="badge bg-{{ doc.type_color }}-subtle text-{{ doc.type_color }} border border-{{ doc.type_color }}-subtle" style="font-size:.72rem;">
+                  <i class="bi {{ doc.type_icon }} me-1"></i>{{ doc.get_document_type_display }}
+                </span>
+                <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle" style="font-size:.72rem;">
+                  <i class="bi {{ doc.category_icon }} me-1"></i>{{ doc.get_category_display }}
+                </span>
+              </div>
+              <h1 class="h3 fw-bold text-dark mb-1">{{ doc.title }}</h1>
+              {% if doc.description %}
+              <p class="text-muted mb-0">{{ doc.description }}</p>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== PDF ==================== -->
+      {% if doc.document_type == 'pdf' %}
+      {% if doc.file %}
+      <div class="card shadow-sm mb-3">
+        <div class="card-header bg-transparent border-0 pt-3 pb-2 d-flex align-items-center justify-content-between">
+          <h5 class="fw-semibold mb-0" style="font-size:.95rem;">
+            <i class="bi bi-file-earmark-pdf me-2 text-danger"></i>Visualisation PDF
+          </h5>
+          <a href="{{ doc.file.url }}" download class="btn btn-sm btn-outline-danger">
+            <i class="bi bi-download me-1"></i>Telecharger
+          </a>
+        </div>
+        <div class="card-body p-3">
+          <iframe src="{{ doc.file.url }}" class="pdf-viewer" title="{{ doc.title }}"></iframe>
+        </div>
+      </div>
+      {% else %}
+      <div class="card shadow-sm mb-3">
+        <div class="card-body text-center py-4 text-muted">
+          <i class="bi bi-file-earmark-pdf display-4 opacity-50 d-block mb-2"></i>
+          Aucun fichier PDF associe a ce document.
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- ==================== HTML ==================== -->
+      {% elif doc.document_type == 'html' %}
+      <div class="card shadow-sm mb-3">
+        <div class="card-header bg-transparent border-0 pt-3 pb-2 d-flex align-items-center justify-content-between">
+          <h5 class="fw-semibold mb-0" style="font-size:.95rem;">
+            <i class="bi bi-file-earmark-code me-2 text-primary"></i>Contenu HTML
+          </h5>
+          {% if doc.file %}
+          <a href="{{ doc.file.url }}" download class="btn btn-sm btn-outline-primary">
+            <i class="bi bi-download me-1"></i>Telecharger
+          </a>
+          {% endif %}
+        </div>
+        <div class="card-body p-4">
+          {% if doc.html_content %}
+          <div class="doc-html-content">{{ doc.html_content|safe_html }}</div>
+          {% elif doc.file %}
+          <p class="text-muted small">Fichier HTML disponible en telechargement ci-dessus.</p>
+          {% else %}
+          <p class="text-muted small">Aucun contenu HTML disponible.</p>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- ==================== TEXT ==================== -->
+      {% elif doc.document_type == 'text' %}
+      <div class="card shadow-sm mb-3">
+        <div class="card-header bg-transparent border-0 pt-3 pb-2 d-flex align-items-center justify-content-between">
+          <h5 class="fw-semibold mb-0" style="font-size:.95rem;">
+            <i class="bi bi-file-earmark-text me-2 text-secondary"></i>Contenu texte
+          </h5>
+          {% if doc.file %}
+          <a href="{{ doc.file.url }}" download class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-download me-1"></i>Telecharger
+          </a>
+          {% endif %}
+        </div>
+        <div class="card-body p-3">
+          {% if doc.html_content %}
+          <pre class="doc-text-content mb-0">{{ doc.html_content }}</pre>
+          {% else %}
+          <p class="text-muted small">Contenu non disponible en apercu. Utilisez le bouton de telechargement.</p>
+          {% endif %}
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Relations -->
+      {% if doc.related_procedure or doc.related_concept %}
+      <div class="card shadow-sm mb-4">
+        <div class="card-header bg-transparent border-0 pt-3 pb-0">
+          <h6 class="fw-semibold mb-0 small"><i class="bi bi-link-45deg me-2 text-primary"></i>Ressources liees</h6>
+        </div>
+        <div class="card-body pt-2 pb-3">
+          <div class="d-flex flex-wrap gap-2">
+            {% if doc.related_procedure %}
+            <a href="{{ doc.related_procedure.get_absolute_url }}"
+               class="btn btn-sm btn-outline-primary">
+              <i class="bi bi-collection me-1"></i>{{ doc.related_procedure.title }}
+            </a>
+            {% endif %}
+            {% if doc.related_concept %}
+            <a href="{{ doc.related_concept.get_absolute_url }}"
+               class="btn btn-sm btn-outline-primary">
+              <i class="bi bi-mortarboard me-1"></i>{{ doc.related_concept.title }}
+            </a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-xl-3">
+
+      <!-- Bouton retour -->
+      <a href="{% url 'docs:list' %}" class="btn btn-outline-secondary btn-sm w-100 mb-3">
+        <i class="bi bi-arrow-left me-1"></i>Retour aux documents
+      </a>
+
+      <!-- Fiche document -->
+      <div class="card shadow-sm mb-3">
+        <div class="card-header bg-transparent border-0 pt-3 pb-0">
+          <h6 class="fw-semibold mb-0 small"><i class="bi bi-info-circle me-2 text-primary"></i>Fiche</h6>
+        </div>
+        <div class="card-body pt-2 pb-2">
+          <dl class="mb-0" style="font-size:.82rem;">
+            <div class="d-flex justify-content-between py-1 border-bottom">
+              <dt class="fw-medium text-muted">Type</dt>
+              <dd class="mb-0">
+                <span class="badge bg-{{ doc.type_color }}-subtle text-{{ doc.type_color }}">{{ doc.get_document_type_display }}</span>
+              </dd>
+            </div>
+            <div class="d-flex justify-content-between py-1 border-bottom">
+              <dt class="fw-medium text-muted">Categorie</dt>
+              <dd class="mb-0 text-dark">{{ doc.get_category_display }}</dd>
+            </div>
+            <div class="d-flex justify-content-between py-1 border-bottom">
+              <dt class="fw-medium text-muted">Ajoute le</dt>
+              <dd class="mb-0 text-dark">{{ doc.created_at|date:"d/m/Y" }}</dd>
+            </div>
+            <div class="d-flex justify-content-between py-1">
+              <dt class="fw-medium text-muted">Mis a jour</dt>
+              <dd class="mb-0 text-dark">{{ doc.updated_at|date:"d/m/Y" }}</dd>
+            </div>
+          </dl>
+        </div>
+      </div>
+
+      <!-- Tags -->
+      {% if doc.tag_list %}
+      <div class="card shadow-sm mb-3">
+        <div class="card-header bg-transparent border-0 pt-3 pb-0">
+          <h6 class="fw-semibold mb-0 small"><i class="bi bi-tags me-2 text-primary"></i>Tags</h6>
+        </div>
+        <div class="card-body pt-2 pb-3">
+          <div class="d-flex flex-wrap gap-1">
+            {% for tag in doc.tag_list %}
+            <span class="doc-tag">{{ tag }}</span>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Telechargement -->
+      {% if doc.file %}
+      <div class="card shadow-sm">
+        <div class="card-body py-3">
+          <a href="{{ doc.file.url }}" download
+             class="btn btn-primary btn-sm w-100">
+            <i class="bi bi-download me-1"></i>Telecharger le fichier
+          </a>
+          {% if doc.document_type == 'pdf' %}
+          <a href="{{ doc.file.url }}" target="_blank"
+             class="btn btn-outline-secondary btn-sm w-100 mt-2">
+            <i class="bi bi-box-arrow-up-right me-1"></i>Ouvrir dans un nouvel onglet
+          </a>
+          {% endif %}
+        </div>
+      </div>
+      {% endif %}
+
+    </div>
+  </div>
+</div>
+{% endblock %}

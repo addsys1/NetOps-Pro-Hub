@@ -1,0 +1,614 @@
+{% extends 'base.html' %}
+{% load netops_tags %}
+
+{% block title %}{{ procedure.title }} — NetOps Pro Hub{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+
+  <!-- Breadcrumb -->
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{% url 'core:dashboard' %}">Dashboard</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'procedures:list' %}">Catalogue</a></li>
+      <li class="breadcrumb-item active" aria-current="page">{{ procedure.title|truncatechars:50 }}</li>
+    </ol>
+  </nav>
+
+  <div class="row g-4">
+
+    <!-- Contenu principal -->
+    <div class="col-xl-9">
+
+      <!-- Header de la procédure -->
+      <div class="card shadow-sm mb-4">
+        <div class="card-body p-4">
+
+          <!-- Badges ligne 1 -->
+          <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+            {% if procedure.category %}
+            <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">
+              <i class="{{ procedure.category.icon }} me-1"></i>{{ procedure.category.name }}
+            </span>
+            {% endif %}
+            <span class="badge bg-{{ procedure.difficulty|difficulty_badge }}-subtle
+                              text-{{ procedure.difficulty|difficulty_badge }}
+                              border border-{{ procedure.difficulty|difficulty_badge }}-subtle">
+              {{ procedure.get_difficulty_display }}
+            </span>
+            <span class="criticality-chip criticality-{{ procedure.criticality }}">
+              <i class="bi {{ procedure.criticality|criticality_icon }}"></i>
+              Criticité {{ procedure.get_criticality_display }}
+            </span>
+            {% if procedure.requires_maintenance_window %}
+            <span class="maintenance-badge">
+              <i class="bi bi-moon-stars"></i> Fenêtre de maintenance requise
+            </span>
+            {% endif %}
+            <span class="badge bg-{{ procedure.status|status_badge }}-subtle text-{{ procedure.status|status_badge }}">
+              {{ procedure.get_status_display }}
+            </span>
+          </div>
+
+          <!-- Titre -->
+          <h1 class="proc-detail-title mb-1">{{ procedure.title }}</h1>
+          <p class="text-muted mb-3">{{ procedure.summary }}</p>
+
+          <!-- Meta-infos -->
+          <div class="d-flex flex-wrap gap-4 pt-3 border-top">
+            <div class="meta-item">
+              <span class="meta-label">Vendor</span>
+              <span class="meta-value">
+                <i class="bi {{ procedure.vendor|vendor_icon }} me-1"></i>{{ procedure.get_vendor_display }}
+              </span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">Plateforme</span>
+              <span class="meta-value">
+                <span class="platform-chip">{{ procedure.get_platform_display }}</span>
+              </span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">Équipement</span>
+              <span class="meta-value"><i class="bi bi-hdd me-1"></i>{{ procedure.get_device_type_display }}</span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">Durée estimée</span>
+              <span class="meta-value"><i class="bi bi-clock me-1"></i>{{ procedure.estimated_duration }} min</span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">Étapes</span>
+              <span class="meta-value"><i class="bi bi-list-ol me-1"></i>{{ steps|length }}</span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">Mise à jour</span>
+              <span class="meta-value"><i class="bi bi-calendar3 me-1"></i>{{ procedure.updated_at|date:"d/m/Y" }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Navigation par onglets -->
+      <ul class="nav proc-tabs mb-0" id="procDetailTabs" role="tablist">
+        <li class="nav-item">
+          <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-contexte" type="button">
+            <i class="bi bi-info-circle"></i>Contexte
+          </button>
+        </li>
+        <li class="nav-item">
+          <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-procedure" type="button">
+            <i class="bi bi-list-ol"></i>Procédure
+            {% if steps %}<span class="tab-badge">{{ steps|length }}</span>{% endif %}
+          </button>
+        </li>
+        <li class="nav-item">
+          <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-checks" type="button">
+            <i class="bi bi-clipboard-check"></i>Checks
+            {% with total=pre_checks|length|add:post_checks|length|add:validations|length %}
+            {% if total %}<span class="tab-badge">{{ total }}</span>{% endif %}
+            {% endwith %}
+          </button>
+        </li>
+        {% if has_rollback %}
+        <li class="nav-item">
+          <button class="nav-link text-danger" data-bs-toggle="tab" data-bs-target="#tab-rollback" type="button">
+            <i class="bi bi-arrow-counterclockwise"></i>Rollback
+          </button>
+        </li>
+        {% endif %}
+        {% if procedure.best_practices or procedure.common_pitfalls or procedure.notes %}
+        <li class="nav-item">
+          <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-conseils" type="button">
+            <i class="bi bi-lightbulb"></i>Conseils
+          </button>
+        </li>
+        {% endif %}
+      </ul>
+
+      <div class="tab-content pt-3" id="procDetailTabsContent">
+
+        <!-- ── Tab Contexte ──────────────────────────────── -->
+        <div class="tab-pane fade show active" id="tab-contexte">
+
+          {% if procedure.objective %}
+          <div class="card shadow-sm mb-3" id="section-objectif">
+            <div class="card-body p-4">
+              <h5 class="section-card-title">
+                <i class="bi bi-bullseye me-2 text-primary"></i>Objectif
+              </h5>
+              <p class="mb-0 text-body-secondary">{{ procedure.objective|linebreaksbr }}</p>
+            </div>
+          </div>
+          {% endif %}
+
+          {% if procedure.use_cases %}
+          <div class="card shadow-sm mb-3" id="section-usecases">
+            <div class="card-body p-4">
+              <h5 class="section-card-title">
+                <i class="bi bi-diagram-2 me-2 text-info"></i>Cas d'usage
+              </h5>
+              <p class="mb-0 text-body-secondary">{{ procedure.use_cases|linebreaksbr }}</p>
+            </div>
+          </div>
+          {% endif %}
+
+          {% if procedure.prerequisites %}
+          <div class="card shadow-sm mb-3" id="section-prerequis">
+            <div class="card-body p-4">
+              <h5 class="section-card-title">
+                <i class="bi bi-check2-all me-2 text-success"></i>Prérequis
+              </h5>
+              <p class="mb-0 text-body-secondary">{{ procedure.prerequisites|linebreaksbr }}</p>
+            </div>
+          </div>
+          {% endif %}
+
+          {% if procedure.expected_outcome %}
+          <div class="card shadow-sm mb-3" id="section-resultat">
+            <div class="card-body p-4">
+              <h5 class="section-card-title">
+                <i class="bi bi-check-circle me-2 text-success"></i>Résultat attendu
+              </h5>
+              <div class="expected-block">
+                <p class="mb-0 small">{{ procedure.expected_outcome|linebreaksbr }}</p>
+              </div>
+            </div>
+          </div>
+          {% endif %}
+
+        </div>
+
+        <!-- ── Tab Procédure ─────────────────────────────── -->
+        <div class="tab-pane fade" id="tab-procedure">
+
+          {% if steps %}
+          <div class="card shadow-sm" id="section-etapes">
+            <div class="card-body p-4">
+              <div class="d-flex align-items-center justify-content-between mb-4">
+                <h5 class="section-card-title mb-0">
+                  <i class="bi bi-list-ol me-2 text-primary"></i>Étapes de configuration
+                </h5>
+                <a href="{% url 'procedures:generate' procedure.slug %}"
+                   class="btn btn-primary btn-sm">
+                  <i class="bi bi-lightning-charge-fill me-1"></i>Générer avec mes variables
+                </a>
+              </div>
+
+              {% for step in steps %}
+              <div class="step-item mb-4 {% if not forloop.last %}pb-4 border-bottom{% endif %}">
+                {% if not forloop.last %}
+                <div class="step-connector"></div>
+                {% endif %}
+                <div class="d-flex align-items-start gap-3">
+                  <div class="step-number flex-shrink-0">{{ step.step_number }}</div>
+                  <div class="flex-grow-1 min-w-0">
+                    <h6 class="fw-semibold mb-2">{{ step.title }}</h6>
+                    <p class="text-muted small mb-3">{{ step.explanation|linebreaksbr }}</p>
+
+                    {% if step.command_template %}
+                    <div class="command-block-full mb-2">
+                      <div class="command-header">
+                        <span class="command-header-label">
+                          <i class="bi bi-terminal me-1"></i>Template de commandes
+                        </span>
+                        <button class="btn-copy" onclick="copyCode(this)" title="Copier">
+                          <i class="bi bi-clipboard"></i> Copier
+                        </button>
+                      </div>
+                      <pre class="command-pre"><code>{{ step.command_template }}</code></pre>
+                    </div>
+                    {% endif %}
+
+                    {% if step.real_world_example %}
+                    <div class="example-block mb-2">
+                      <div class="d-flex align-items-center gap-1 mb-1">
+                        <span style="font-size:0.85rem;">💡</span>
+                        <span class="small fw-semibold" style="color:#0891b2;">Exemple concret</span>
+                      </div>
+                      <p class="mb-0 example-block-text">{{ step.real_world_example|linebreaksbr }}</p>
+                    </div>
+                    {% endif %}
+
+                    {% if step.expected_result %}
+                    <div class="expected-block mb-2">
+                      <div class="d-flex align-items-center gap-2 mb-1">
+                        <i class="bi bi-check-circle-fill text-success" style="font-size:0.8rem;"></i>
+                        <span class="small fw-semibold text-success">Résultat attendu</span>
+                      </div>
+                      <p class="text-muted small mb-0">{{ step.expected_result }}</p>
+                    </div>
+                    {% endif %}
+
+                    {% if step.warning %}
+                    <div class="alert alert-warning d-flex align-items-start gap-2 py-2 px-3 mb-0" role="alert">
+                      <i class="bi bi-exclamation-triangle-fill flex-shrink-0 mt-1" style="font-size:0.85rem;"></i>
+                      <span class="small">{{ step.warning }}</span>
+                    </div>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+              {% endfor %}
+
+              {% if procedure.save_config_required %}
+              <div class="alert-info-soft d-flex align-items-center gap-2 mt-3">
+                <i class="bi bi-floppy text-info"></i>
+                <span class="small"><strong>Sauvegarde requise</strong> — Pensez à exécuter
+                  <code class="small" style="font-family:var(--font-mono);">copy running-config startup-config</code>
+                  après validation.
+                </span>
+              </div>
+              {% endif %}
+            </div>
+          </div>
+          {% else %}
+          <div class="card shadow-sm">
+            <div class="card-body text-center py-4 text-muted">
+              <i class="bi bi-list-ol display-4 d-block mb-2 opacity-25"></i>
+              Aucune étape configurée pour cette procédure.
+            </div>
+          </div>
+          {% endif %}
+
+        </div>
+
+        <!-- ── Tab Checks ────────────────────────────────── -->
+        <div class="tab-pane fade" id="tab-checks">
+
+          <!-- Pré-checks -->
+          {% if pre_checks %}
+          <div class="card shadow-sm mb-3" id="section-pre">
+            <div class="card-header bg-transparent border-0 pt-3 pb-0">
+              <h5 class="section-card-title">
+                <i class="bi bi-clipboard-check me-2 text-info"></i>Pré-checks
+                <span class="badge bg-info-subtle text-info border border-info-subtle ms-1" style="font-size:0.7rem;">Avant intervention</span>
+              </h5>
+            </div>
+            <div class="card-body pt-2">
+              {% for check in pre_checks %}
+              <div class="check-item {% if not forloop.last %}border-bottom{% endif %}">
+                <div class="check-title">{{ check.title }}</div>
+                <div class="command-block-full mb-2">
+                  <div class="command-header">
+                    <span class="command-header-label"><i class="bi bi-terminal me-1"></i>Commande</span>
+                    <button class="btn-copy" onclick="copyCode(this)"><i class="bi bi-clipboard"></i> Copier</button>
+                  </div>
+                  <pre class="command-pre"><code>{{ check.command }}</code></pre>
+                </div>
+                {% if check.expected_output %}
+                <div class="expected-output">
+                  <span class="small text-muted fw-semibold"><i class="bi bi-arrow-return-right me-1"></i>Sortie attendue</span>
+                  <code class="small d-block mt-1">{{ check.expected_output }}</code>
+                </div>
+                {% endif %}
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+          {% endif %}
+
+          <!-- Post-checks -->
+          {% if post_checks %}
+          <div class="card shadow-sm mb-3" id="section-post">
+            <div class="card-header bg-transparent border-0 pt-3 pb-0">
+              <h5 class="section-card-title">
+                <i class="bi bi-patch-check me-2 text-success"></i>Post-checks
+                <span class="badge bg-success-subtle text-success border border-success-subtle ms-1" style="font-size:0.7rem;">Après intervention</span>
+              </h5>
+            </div>
+            <div class="card-body pt-2">
+              {% for check in post_checks %}
+              <div class="check-item {% if not forloop.last %}border-bottom{% endif %}">
+                <div class="check-title">{{ check.title }}</div>
+                <div class="command-block-full mb-2">
+                  <div class="command-header">
+                    <span class="command-header-label"><i class="bi bi-terminal me-1"></i>Commande</span>
+                    <button class="btn-copy" onclick="copyCode(this)"><i class="bi bi-clipboard"></i> Copier</button>
+                  </div>
+                  <pre class="command-pre"><code>{{ check.command }}</code></pre>
+                </div>
+                {% if check.expected_output %}
+                <div class="expected-output">
+                  <span class="small text-muted fw-semibold"><i class="bi bi-arrow-return-right me-1"></i>Sortie attendue</span>
+                  <code class="small d-block mt-1">{{ check.expected_output }}</code>
+                </div>
+                {% endif %}
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+          {% endif %}
+
+          <!-- Validation -->
+          {% if validations %}
+          <div class="card shadow-sm mb-3" id="section-validation">
+            <div class="card-header bg-transparent border-0 pt-3 pb-0">
+              <h5 class="section-card-title">
+                <i class="bi bi-shield-check me-2 text-primary"></i>Validation finale
+              </h5>
+            </div>
+            <div class="card-body pt-2">
+              {% for check in validations %}
+              <div class="check-item {% if not forloop.last %}border-bottom{% endif %}">
+                <div class="check-title">{{ check.title }}</div>
+                <div class="command-block-full">
+                  <div class="command-header">
+                    <span class="command-header-label"><i class="bi bi-terminal me-1"></i>Commande</span>
+                    <button class="btn-copy" onclick="copyCode(this)"><i class="bi bi-clipboard"></i> Copier</button>
+                  </div>
+                  <pre class="command-pre"><code>{{ check.command }}</code></pre>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+          {% endif %}
+
+          <!-- Troubleshooting -->
+          {% if troubleshootings %}
+          <div class="card shadow-sm troubleshoot-card mb-3" id="section-troubleshoot">
+            <div class="card-header bg-transparent border-0 pt-3 pb-0">
+              <h5 class="section-card-title">
+                <i class="bi bi-bug me-2 text-warning"></i>Dépannage
+              </h5>
+            </div>
+            <div class="card-body pt-2">
+              {% for check in troubleshootings %}
+              <div class="check-item {% if not forloop.last %}border-bottom{% endif %}">
+                <div class="check-title">{{ check.title }}</div>
+                <div class="command-block-full mb-2">
+                  <div class="command-header">
+                    <span class="command-header-label"><i class="bi bi-terminal me-1"></i>Commande</span>
+                    <button class="btn-copy" onclick="copyCode(this)"><i class="bi bi-clipboard"></i> Copier</button>
+                  </div>
+                  <pre class="command-pre"><code>{{ check.command }}</code></pre>
+                </div>
+                {% if check.expected_output %}
+                <div class="expected-output">
+                  <span class="small text-muted fw-semibold"><i class="bi bi-arrow-return-right me-1"></i>Résultat attendu</span>
+                  <code class="small d-block mt-1">{{ check.expected_output }}</code>
+                </div>
+                {% endif %}
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+          {% endif %}
+
+          {% if not pre_checks and not post_checks and not validations and not troubleshootings %}
+          <div class="card shadow-sm">
+            <div class="card-body text-center py-4 text-muted">
+              <i class="bi bi-clipboard display-4 d-block mb-2 opacity-25"></i>
+              Aucun check configuré pour cette procédure.
+            </div>
+          </div>
+          {% endif %}
+
+        </div>
+
+        <!-- ── Tab Rollback ──────────────────────────────── -->
+        {% if has_rollback %}
+        <div class="tab-pane fade" id="tab-rollback">
+          <div class="card shadow-sm rollback-card" id="section-rollback">
+            <div class="rollback-header p-4 pb-3">
+              <h5 class="section-card-title text-danger mb-1">
+                <i class="bi bi-arrow-counterclockwise me-2"></i>Procédure de rollback
+              </h5>
+              <p class="text-muted small mb-0">
+                Exécuter uniquement si la procédure principale échoue ou cause des dysfonctionnements.
+              </p>
+            </div>
+            <div class="card-body p-4">
+              {% if procedure.rollback.conditions %}
+              <div class="mb-4">
+                <p class="fw-semibold small text-muted mb-1" style="text-transform:uppercase;letter-spacing:.06em;">
+                  Conditions de déclenchement
+                </p>
+                <p class="mb-0 text-body-secondary">{{ procedure.rollback.conditions|linebreaksbr }}</p>
+              </div>
+              {% endif %}
+
+              <div class="mb-3">
+                <p class="fw-semibold small text-muted mb-2" style="text-transform:uppercase;letter-spacing:.06em;">
+                  Commandes de rollback
+                </p>
+                <div class="command-block-full">
+                  <div class="command-header">
+                    <span class="command-header-label">
+                      <i class="bi bi-terminal me-1"></i>Rollback commands
+                    </span>
+                    <button class="btn-copy" onclick="copyCode(this)">
+                      <i class="bi bi-clipboard"></i> Copier
+                    </button>
+                  </div>
+                  <pre class="command-pre"><code>{{ procedure.rollback.rollback_commands }}</code></pre>
+                </div>
+              </div>
+
+              {% if procedure.rollback.notes %}
+              <div class="alert alert-warning d-flex align-items-start gap-2 py-2 px-3 mb-0">
+                <i class="bi bi-exclamation-triangle-fill text-warning flex-shrink-0 mt-1"></i>
+                <span class="small">{{ procedure.rollback.notes }}</span>
+              </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- ── Tab Conseils ──────────────────────────────── -->
+        {% if procedure.best_practices or procedure.common_pitfalls or procedure.notes %}
+        <div class="tab-pane fade" id="tab-conseils">
+
+          {% if procedure.best_practices %}
+          <div class="card shadow-sm mb-3">
+            <div class="card-body p-4">
+              <h5 class="section-card-title">
+                <i class="bi bi-patch-check-fill me-2 text-success"></i>Bonnes pratiques
+              </h5>
+              <div class="best-practices-block">
+                <p class="mb-0 small text-body-secondary">{{ procedure.best_practices|linebreaksbr }}</p>
+              </div>
+            </div>
+          </div>
+          {% endif %}
+
+          {% if procedure.common_pitfalls %}
+          <div class="card shadow-sm mb-3">
+            <div class="card-body p-4">
+              <h5 class="section-card-title">
+                <i class="bi bi-exclamation-circle-fill me-2 text-danger"></i>Pièges fréquents
+              </h5>
+              <div class="pitfalls-block">
+                <p class="mb-0 small text-body-secondary">{{ procedure.common_pitfalls|linebreaksbr }}</p>
+              </div>
+            </div>
+          </div>
+          {% endif %}
+
+          {% if procedure.notes %}
+          <div class="card shadow-sm mb-3">
+            <div class="card-body p-4">
+              <h5 class="section-card-title">
+                <i class="bi bi-sticky me-2 text-warning"></i>Notes
+              </h5>
+              <p class="mb-0 text-body-secondary small">{{ procedure.notes|linebreaksbr }}</p>
+            </div>
+          </div>
+          {% endif %}
+
+        </div>
+        {% endif %}
+
+      </div><!-- /tab-content -->
+    </div><!-- /col-xl-9 -->
+
+    <!-- Sidebar -->
+    <div class="col-xl-3">
+      <div class="sticky-top" style="top:78px;">
+
+        <!-- CTA Générateur -->
+        <div class="card shadow-sm mb-3" style="background:linear-gradient(135deg,#1e3a8a,#2563eb);border:none;">
+          <div class="card-body text-center py-4 px-3">
+            <i class="bi bi-lightning-charge-fill text-white opacity-75 d-block mb-2" style="font-size:2rem;"></i>
+            <h6 class="text-white fw-semibold mb-1">Générer les commandes</h6>
+            <p class="text-white opacity-75 small mb-3" style="font-size:0.78rem;">
+              Saisissez vos paramètres pour obtenir une configuration personnalisée et prête à déployer.
+            </p>
+            <a href="{% url 'procedures:generate' procedure.slug %}"
+               class="btn btn-light btn-sm w-100 fw-semibold text-primary">
+              <i class="bi bi-play-fill me-1"></i>Lancer le générateur
+            </a>
+          </div>
+        </div>
+
+        <!-- Variables disponibles -->
+        {% if procedure.variables.all %}
+        <div class="card shadow-sm mb-3">
+          <div class="card-header bg-transparent border-0 pt-3 pb-0">
+            <h6 class="fw-semibold mb-0 text-muted" style="font-size:0.72rem;text-transform:uppercase;letter-spacing:.07em;">
+              Variables dynamiques
+            </h6>
+          </div>
+          <div class="card-body py-2">
+            {% for var in procedure.variables.all %}
+            <div class="d-flex align-items-center justify-content-between py-1 {% if not forloop.last %}border-bottom{% endif %}">
+              <code class="small text-primary" style="font-size:0.78rem;">{{ var.name }}</code>
+              <span class="text-muted" style="font-size:0.73rem;">{{ var.label }}</span>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- Table des matières -->
+        <div class="card shadow-sm mb-3">
+          <div class="card-header bg-transparent border-0 pt-3 pb-0">
+            <h6 class="fw-semibold mb-0 text-muted" style="font-size:0.72rem;text-transform:uppercase;letter-spacing:.07em;">
+              Sections
+            </h6>
+          </div>
+          <div class="card-body py-2 px-0">
+            <ul class="toc-list">
+              <li>
+                <button class="toc-link w-100 border-0 bg-transparent text-start"
+                        onclick="showTab('tab-contexte')">
+                  <i class="bi bi-info-circle"></i>Contexte
+                </button>
+              </li>
+              {% if steps %}
+              <li>
+                <button class="toc-link w-100 border-0 bg-transparent text-start"
+                        onclick="showTab('tab-procedure')">
+                  <i class="bi bi-list-ol"></i>Procédure ({{ steps|length }} étapes)
+                </button>
+              </li>
+              {% endif %}
+              {% if pre_checks or post_checks or validations %}
+              <li>
+                <button class="toc-link w-100 border-0 bg-transparent text-start"
+                        onclick="showTab('tab-checks')">
+                  <i class="bi bi-clipboard-check"></i>Checks
+                </button>
+              </li>
+              {% endif %}
+              {% if has_rollback %}
+              <li>
+                <button class="toc-link w-100 border-0 bg-transparent text-start text-danger"
+                        onclick="showTab('tab-rollback')">
+                  <i class="bi bi-arrow-counterclockwise"></i>Rollback
+                </button>
+              </li>
+              {% endif %}
+              {% if procedure.best_practices or procedure.common_pitfalls %}
+              <li>
+                <button class="toc-link w-100 border-0 bg-transparent text-start"
+                        onclick="showTab('tab-conseils')">
+                  <i class="bi bi-lightbulb"></i>Conseils & pièges
+                </button>
+              </li>
+              {% endif %}
+            </ul>
+          </div>
+        </div>
+
+        <a href="{% url 'procedures:list' %}" class="btn btn-outline-secondary btn-sm w-100">
+          <i class="bi bi-arrow-left me-1"></i>Retour au catalogue
+        </a>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function showTab(id) {
+  const btn = document.querySelector('[data-bs-target="#' + id + '"]');
+  if (btn) { bootstrap.Tab.getOrCreateInstance(btn).show(); }
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,237 @@
+{% extends 'base.html' %}
+{% load netops_tags %}
+
+{% block title %}{{ concept.title }} — Concepts Réseau — NetOps Pro Hub{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+
+  <!-- Breadcrumb -->
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb mb-0" style="font-size:.82rem;">
+      <li class="breadcrumb-item"><a href="{% url 'core:dashboard' %}" class="text-decoration-none text-muted">Dashboard</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'concepts:list' %}" class="text-decoration-none text-muted">Concepts</a></li>
+      <li class="breadcrumb-item active text-dark">{{ concept.title }}</li>
+    </ol>
+  </nav>
+
+  <div class="row g-4">
+
+    <!-- Colonne principale -->
+    <div class="col-xl-8">
+
+      <!-- En-tête concept -->
+      <div class="card shadow-sm mb-4">
+        <div class="card-body p-4">
+          <div class="d-flex align-items-start gap-3">
+            <div class="concept-icon-wrap concept-icon-lg bg-primary-subtle text-primary flex-shrink-0">
+              <i class="bi {{ concept.icon }}"></i>
+            </div>
+            <div class="flex-grow-1">
+              <div class="d-flex flex-wrap gap-2 mb-2">
+                <span class="badge bg-primary-subtle text-primary border border-primary-subtle" style="font-size:.72rem;">
+                  <i class="bi bi-collection me-1"></i>Module {{ concept.module_number }} — {{ concept.module_name }}
+                </span>
+                <span class="badge bg-{{ concept.level_color }}-subtle text-{{ concept.level_color }} border border-{{ concept.level_color }}-subtle" style="font-size:.72rem;">
+                  <i class="bi bi-bar-chart me-1"></i>{{ concept.level_label }}
+                </span>
+              </div>
+              <h1 class="h3 fw-bold text-dark mb-1">{{ concept.title }}</h1>
+              <p class="text-muted mb-0">{{ concept.summary }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Explication simple -->
+      <div class="card shadow-sm mb-3 concept-section">
+        <div class="card-header bg-transparent border-0 pt-3 pb-0">
+          <h5 class="fw-semibold mb-0" style="font-size:.95rem;">
+            <span class="concept-emoji">🧠</span> Explication simple
+          </h5>
+        </div>
+        <div class="card-body pt-2">
+          <div class="concept-text">{{ concept.simple_explanation|linebreaks }}</div>
+        </div>
+      </div>
+
+      <!-- Exemple concret -->
+      <div class="card shadow-sm mb-3 concept-section concept-section-example">
+        <div class="card-header bg-transparent border-0 pt-3 pb-0">
+          <h5 class="fw-semibold mb-0" style="font-size:.95rem;">
+            <span class="concept-emoji">🏠</span> Exemple concret
+          </h5>
+        </div>
+        <div class="card-body pt-2">
+          <div class="concept-text concept-example-text">{{ concept.concrete_example|linebreaks }}</div>
+        </div>
+      </div>
+
+      <!-- Version technique -->
+      <div class="card shadow-sm mb-3 concept-section concept-section-tech">
+        <div class="card-header bg-transparent border-0 pt-3 pb-0">
+          <h5 class="fw-semibold mb-0" style="font-size:.95rem;">
+            <span class="concept-emoji">⚙️</span> Version technique (courte)
+          </h5>
+        </div>
+        <div class="card-body pt-2">
+          <div class="concept-text concept-tech-text">{{ concept.technical_version|linebreaks }}</div>
+        </div>
+      </div>
+
+      <!-- Résumé -->
+      <div class="card shadow-sm mb-4 border-primary" style="border-left:4px solid var(--nb-accent) !important;">
+        <div class="card-body py-3">
+          <div class="d-flex align-items-start gap-2">
+            <span class="concept-emoji mt-1">✅</span>
+            <div>
+              <span class="fw-semibold text-dark small d-block mb-1">Résumé en une phrase</span>
+              <p class="mb-0 text-dark" style="font-size:.9rem;">{{ concept.summary }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mini Quiz -->
+      <div class="card shadow-sm mb-4 concept-quiz-card">
+        <div class="card-header bg-transparent border-0 pt-3 pb-1">
+          <h5 class="fw-semibold mb-0" style="font-size:.95rem;">
+            <span class="concept-emoji">🧪</span> Mini Quiz
+          </h5>
+          <p class="text-muted mb-0 mt-1" style="font-size:.78rem;">Clique sur la réponse pour la révéler.</p>
+        </div>
+        <div class="card-body pt-2">
+
+          <!-- Question 1 -->
+          <div class="quiz-item mb-3">
+            <div class="quiz-question">
+              <span class="quiz-num">Q1</span>
+              <span>{{ concept.quiz_q1 }}</span>
+            </div>
+            <div class="quiz-answer-wrap mt-2">
+              <button class="btn btn-sm btn-outline-primary quiz-reveal-btn w-100"
+                      onclick="revealAnswer(this)">
+                <i class="bi bi-eye me-1"></i>Voir la réponse
+              </button>
+              <div class="quiz-answer mt-2 d-none">
+                <i class="bi bi-check-circle-fill text-success me-2"></i>
+                <span>{{ concept.quiz_a1 }}</span>
+              </div>
+            </div>
+          </div>
+
+          <hr class="my-2 opacity-25">
+
+          <!-- Question 2 -->
+          <div class="quiz-item">
+            <div class="quiz-question">
+              <span class="quiz-num">Q2</span>
+              <span>{{ concept.quiz_q2 }}</span>
+            </div>
+            <div class="quiz-answer-wrap mt-2">
+              <button class="btn btn-sm btn-outline-primary quiz-reveal-btn w-100"
+                      onclick="revealAnswer(this)">
+                <i class="bi bi-eye me-1"></i>Voir la réponse
+              </button>
+              <div class="quiz-answer mt-2 d-none">
+                <i class="bi bi-check-circle-fill text-success me-2"></i>
+                <span>{{ concept.quiz_a2 }}</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Navigation prev/next -->
+      <div class="d-flex justify-content-between gap-2 flex-wrap">
+        {% if prev_concept %}
+        <a href="{{ prev_concept.get_absolute_url }}" class="btn btn-outline-secondary btn-sm">
+          <i class="bi bi-chevron-left me-1"></i>{{ prev_concept.title }}
+        </a>
+        {% else %}
+        <div></div>
+        {% endif %}
+        {% if next_concept %}
+        <a href="{{ next_concept.get_absolute_url }}" class="btn btn-outline-primary btn-sm">
+          {{ next_concept.title }}<i class="bi bi-chevron-right ms-1"></i>
+        </a>
+        {% endif %}
+      </div>
+
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-xl-4">
+
+      <!-- Bouton retour -->
+      <a href="{% url 'concepts:list' %}" class="btn btn-outline-secondary btn-sm w-100 mb-3">
+        <i class="bi bi-arrow-left me-1"></i>Retour aux concepts
+      </a>
+
+      <!-- Infos concept -->
+      <div class="card shadow-sm mb-3">
+        <div class="card-header bg-transparent border-0 pt-3 pb-0">
+          <h6 class="fw-semibold mb-0 small"><i class="bi bi-info-circle me-2 text-primary"></i>Fiche concept</h6>
+        </div>
+        <div class="card-body pt-2 pb-2">
+          <dl class="mb-0" style="font-size:.82rem;">
+            <div class="d-flex justify-content-between py-1 border-bottom">
+              <dt class="fw-medium text-muted">Module</dt>
+              <dd class="mb-0 text-dark">{{ concept.module_number }} — {{ concept.module_name }}</dd>
+            </div>
+            <div class="d-flex justify-content-between py-1 border-bottom">
+              <dt class="fw-medium text-muted">Niveau</dt>
+              <dd class="mb-0">
+                <span class="badge bg-{{ concept.level_color }}-subtle text-{{ concept.level_color }}">{{ concept.level_label }}</span>
+              </dd>
+            </div>
+            <div class="d-flex justify-content-between py-1">
+              <dt class="fw-medium text-muted">Ordre</dt>
+              <dd class="mb-0 text-dark">Concept n°{{ concept.order }}</dd>
+            </div>
+          </dl>
+        </div>
+      </div>
+
+      <!-- Autres concepts du module -->
+      <div class="card shadow-sm">
+        <div class="card-header bg-transparent border-0 pt-3 pb-0">
+          <h6 class="fw-semibold mb-0 small">
+            <i class="bi bi-collection me-2 text-primary"></i>Dans ce module
+          </h6>
+        </div>
+        <div class="card-body p-0">
+          <ul class="list-group list-group-flush">
+            {% with module_concepts=concept.module_number %}
+            {% for c in concept|get_module_concepts %}
+            <li class="list-group-item border-0 px-3 py-2 {% if c.pk == concept.pk %}bg-primary-subtle{% endif %}">
+              <a href="{{ c.get_absolute_url }}" class="text-decoration-none d-flex align-items-center gap-2">
+                <i class="bi {{ c.icon }} text-primary" style="font-size:.8rem;"></i>
+                <span class="small {% if c.pk == concept.pk %}fw-semibold text-primary{% else %}text-dark{% endif %}">{{ c.title }}</span>
+                {% if c.pk == concept.pk %}
+                <i class="bi bi-arrow-left-short ms-auto text-primary"></i>
+                {% endif %}
+              </a>
+            </li>
+            {% empty %}
+            <li class="list-group-item border-0 text-muted small px-3 py-2">Aucun autre concept.</li>
+            {% endfor %}
+            {% endwith %}
+          </ul>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+function revealAnswer(btn) {
+  const wrap = btn.closest('.quiz-answer-wrap');
+  const answer = wrap.querySelector('.quiz-answer');
+  answer.classList.remove('d-none');
+  btn.style.display = 'none';
+}
+</script>
+{% endblock %}

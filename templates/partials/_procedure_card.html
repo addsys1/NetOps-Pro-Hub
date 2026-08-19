@@ -1,0 +1,62 @@
+{% load netops_tags %}
+<div class="card procedure-card border-0 shadow-sm h-100">
+  <div class="card-body d-flex flex-column p-3">
+
+    <!-- Top row: vendor + criticality -->
+    <div class="d-flex align-items-center justify-content-between mb-2 flex-wrap gap-1">
+      <div class="vendor-badge">
+        <i class="bi {{ procedure.vendor|vendor_icon }}"></i>
+        {{ procedure.get_vendor_display }}
+      </div>
+      <div class="d-flex align-items-center gap-1">
+        <span class="criticality-chip criticality-{{ procedure.criticality }}"
+              data-bs-toggle="tooltip" title="Criticité : {{ procedure.get_criticality_display }}">
+          <i class="bi {{ procedure.criticality|criticality_icon }}"></i>
+          {{ procedure.get_criticality_display }}
+        </span>
+        {% if procedure.requires_maintenance_window %}
+        <span class="maintenance-badge" data-bs-toggle="tooltip" title="Fenêtre de maintenance requise">
+          <i class="bi bi-moon-stars"></i>
+        </span>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Title -->
+    <h6 class="fw-semibold mb-1 lh-sm">
+      <a href="{{ procedure.get_absolute_url }}" class="text-decoration-none text-dark stretched-link">
+        {{ procedure.title }}
+      </a>
+    </h6>
+
+    <!-- Category + platform -->
+    <div class="d-flex flex-wrap gap-1 mb-2">
+      {% if procedure.category %}
+      <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle" style="font-size:0.68rem;">
+        <i class="{{ procedure.category.icon }} me-1"></i>{{ procedure.category.name }}
+      </span>
+      {% endif %}
+      <span class="platform-chip">{{ procedure.get_platform_display }}</span>
+    </div>
+
+    <!-- Summary -->
+    <p class="card-text text-muted small flex-grow-1 mb-3 lh-sm">{{ procedure.summary }}</p>
+
+    <!-- Footer row -->
+    <div class="d-flex align-items-center justify-content-between mt-auto pt-2 border-top">
+      <div class="d-flex gap-3 text-muted" style="font-size:0.75rem;">
+        <span data-bs-toggle="tooltip" title="{{ procedure.get_difficulty_display }}">
+          <i class="bi bi-bar-chart me-1"></i>{{ procedure.get_difficulty_display }}
+        </span>
+        <span><i class="bi bi-clock me-1"></i>{{ procedure.estimated_duration }} min</span>
+      </div>
+      <div class="d-flex align-items-center gap-1">
+        {% if procedure.is_featured %}
+        <i class="bi bi-star-fill text-warning" style="font-size:0.8rem;" title="Mise en avant"></i>
+        {% endif %}
+        <i class="bi bi-arrow-right text-primary opacity-50" style="font-size:0.8rem;"></i>
+      </div>
+    </div>
+
+  </div>
+</div>

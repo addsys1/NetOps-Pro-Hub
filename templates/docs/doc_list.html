@@ -1,0 +1,201 @@
+{% extends 'base.html' %}
+
+{% block title %}Documentation Center — NetOps Pro Hub{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+
+  <!-- Header -->
+  <div class="page-header d-flex align-items-center justify-content-between flex-wrap gap-2 mb-4">
+    <div>
+      <h1 class="page-title">
+        <i class="bi bi-folder2-open me-2 text-primary"></i>Documentation Center
+      </h1>
+      <p class="text-muted mb-0 small mt-1">
+        Documents techniques, guides et references reseau.
+        {% if total %}
+          <strong class="text-dark ms-1">{{ total }}</strong> document{{ total|pluralize }} disponible{{ total|pluralize }}.
+        {% endif %}
+      </p>
+    </div>
+  </div>
+
+  <div class="row g-4">
+
+    <!-- Sidebar filtres -->
+    <div class="col-lg-3">
+      <div class="sticky-top" style="top:78px;">
+        <div class="card shadow-sm">
+          <div class="card-header bg-transparent border-0 pt-3 pb-2">
+            <h6 class="fw-semibold mb-0"><i class="bi bi-funnel me-2 text-primary"></i>Filtres</h6>
+          </div>
+          <div class="card-body pt-1">
+            <form method="get" action="" id="filterForm">
+
+              <!-- Recherche -->
+              <div class="mb-3">
+                <label class="form-label small fw-medium text-muted">Recherche</label>
+                <div class="input-group input-group-sm">
+                  <span class="input-group-text bg-transparent"><i class="bi bi-search text-muted"></i></span>
+                  <input type="text" name="q" class="form-control"
+                         placeholder="Titre, description, tag..."
+                         value="{{ search_query }}">
+                </div>
+              </div>
+
+              <!-- Categorie -->
+              <div class="mb-3">
+                <label class="form-label small fw-medium text-muted">Categorie</label>
+                <select name="category" class="form-select form-select-sm" onchange="this.form.submit()">
+                  <option value="">Toutes les categories</option>
+                  {% for val, label in categories %}
+                  <option value="{{ val }}" {% if current_category == val %}selected{% endif %}>{{ label }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <!-- Type -->
+              <div class="mb-3">
+                <label class="form-label small fw-medium text-muted">Type de document</label>
+                <select name="type" class="form-select form-select-sm" onchange="this.form.submit()">
+                  <option value="">Tous les types</option>
+                  {% for val, label in doc_types %}
+                  <option value="{{ val }}" {% if current_type == val %}selected{% endif %}>{{ label }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <button type="submit" class="btn btn-primary btn-sm w-100">
+                <i class="bi bi-search me-1"></i>Rechercher
+              </button>
+              {% if search_query or current_category or current_type %}
+              <a href="{% url 'docs:list' %}" class="btn btn-outline-secondary btn-sm w-100 mt-2">
+                <i class="bi bi-x-circle me-1"></i>Reinitialiser
+              </a>
+              {% endif %}
+
+            </form>
+          </div>
+        </div>
+
+        <!-- Legende types -->
+        <div class="card shadow-sm mt-3">
+          <div class="card-body py-3">
+            <p class="small fw-semibold text-muted mb-2">Types</p>
+            <div class="d-flex flex-column gap-2">
+              <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-danger-subtle text-danger border border-danger-subtle">PDF</span>
+                <span class="text-muted" style="font-size:.75rem;">Document portable</span>
+              </div>
+              <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-primary-subtle text-primary border border-primary-subtle">HTML</span>
+                <span class="text-muted" style="font-size:.75rem;">Page web / guide</span>
+              </div>
+              <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">Texte</span>
+                <span class="text-muted" style="font-size:.75rem;">Texte brut / Markdown</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Grille documents -->
+    <div class="col-lg-9">
+      {% if documents %}
+      <div class="row g-3">
+        {% for doc in documents %}
+        <div class="col-md-6 col-xl-4">
+          <a href="{{ doc.get_absolute_url }}" class="text-decoration-none">
+            <div class="card shadow-sm h-100 doc-card">
+              <div class="card-body">
+
+                <!-- Icone + badge type -->
+                <div class="d-flex align-items-start justify-content-between mb-2">
+                  <div class="doc-type-icon bg-{{ doc.type_color }}-subtle text-{{ doc.type_color }}">
+                    <i class="bi {{ doc.type_icon }}"></i>
+                  </div>
+                  <span class="badge bg-{{ doc.type_color }}-subtle text-{{ doc.type_color }} border border-{{ doc.type_color }}-subtle"
+                        style="font-size:.68rem;">
+                    {{ doc.get_document_type_display }}
+                  </span>
+                </div>
+
+                <!-- Titre + description -->
+                <h6 class="fw-semibold text-dark mb-1 lh-sm">{{ doc.title }}</h6>
+                {% if doc.description %}
+                <p class="text-muted mb-2" style="font-size:.8rem;line-height:1.4;">
+                  {{ doc.description|truncatechars:90 }}
+                </p>
+                {% endif %}
+
+                <!-- Tags -->
+                {% if doc.tag_list %}
+                <div class="d-flex flex-wrap gap-1 mb-0">
+                  {% for tag in doc.tag_list|slice:":3" %}
+                  <span class="doc-tag">{{ tag }}</span>
+                  {% endfor %}
+                </div>
+                {% endif %}
+
+              </div>
+              <div class="card-footer bg-transparent border-0 pt-0 pb-3 px-3">
+                <span class="text-muted" style="font-size:.7rem;">
+                  <i class="bi {{ doc.category_icon }} me-1"></i>{{ doc.get_category_display }}
+                </span>
+              </div>
+            </div>
+          </a>
+        </div>
+        {% endfor %}
+      </div>
+
+      <!-- Pagination -->
+      {% if is_paginated %}
+      <nav class="mt-4" aria-label="Pagination">
+        <ul class="pagination justify-content-center mb-0">
+          {% if page_obj.has_previous %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% if current_category %}&category={{ current_category }}{% endif %}{% if current_type %}&type={{ current_type }}{% endif %}">
+              <i class="bi bi-chevron-left"></i>
+            </a>
+          </li>
+          {% endif %}
+          {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+            <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+            <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+            {% endif %}
+          {% endfor %}
+          {% if page_obj.has_next %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% if current_category %}&category={{ current_category }}{% endif %}{% if current_type %}&type={{ current_type }}{% endif %}">
+              <i class="bi bi-chevron-right"></i>
+            </a>
+          </li>
+          {% endif %}
+        </ul>
+      </nav>
+      {% endif %}
+
+      {% else %}
+      <div class="card shadow-sm">
+        <div class="card-body text-center py-5">
+          <i class="bi bi-folder2-open display-3 text-muted d-block mb-3 opacity-50"></i>
+          <h5 class="text-muted fw-normal">Aucun document trouve</h5>
+          <p class="text-muted small">Modifiez vos criteres ou ajoutez des documents depuis l'admin.</p>
+          {% if search_query or current_category or current_type %}
+          <a href="{% url 'docs:list' %}" class="btn btn-outline-primary btn-sm mt-1">
+            <i class="bi bi-x-circle me-1"></i>Reinitialiser les filtres
+          </a>
+          {% endif %}
+        </div>
+      </div>
+      {% endif %}
+    </div>
+
+  </div>
+</div>
+{% endblock %}

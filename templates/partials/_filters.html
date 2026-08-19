@@ -1,0 +1,76 @@
+{% load netops_tags %}
+<div class="card border-0 shadow-sm">
+  <div class="card-header bg-transparent border-0 pt-3 pb-1">
+    <div class="d-flex align-items-center justify-content-between">
+      <h6 class="fw-semibold mb-0 text-muted" style="font-size:0.78rem;letter-spacing:0.07em;text-transform:uppercase;">
+        <i class="bi bi-funnel me-1 text-primary"></i>Filtres
+      </h6>
+      <a href="{% url 'procedures:list' %}" class="text-muted small text-decoration-none"
+         data-bs-toggle="tooltip" title="Réinitialiser">
+        <i class="bi bi-x-circle"></i>
+      </a>
+    </div>
+  </div>
+
+  <div class="card-body pt-2 pb-3">
+    <form method="get" id="filterForm">
+
+      <div class="mb-3">
+        <label class="form-label small fw-semibold text-muted mb-1">RECHERCHE</label>
+        <div class="input-group input-group-sm">
+          <span class="input-group-text bg-white border-end-0">
+            <i class="bi bi-search text-muted"></i>
+          </span>
+          {{ form.q }}
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label small fw-semibold text-muted mb-1">CATÉGORIE</label>
+        {{ form.category }}
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label small fw-semibold text-muted mb-1">VENDOR</label>
+        {{ form.vendor }}
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label small fw-semibold text-muted mb-1">PLATEFORME</label>
+        {{ form.platform }}
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label small fw-semibold text-muted mb-1">TYPE D'ÉQUIPEMENT</label>
+        {{ form.device_type }}
+      </div>
+
+      <div class="mb-4">
+        <label class="form-label small fw-semibold text-muted mb-1">DIFFICULTÉ</label>
+        {{ form.difficulty }}
+      </div>
+
+      <div class="d-grid">
+        <button type="submit" class="btn btn-primary btn-sm">
+          <i class="bi bi-search me-1"></i>Appliquer les filtres
+        </button>
+      </div>
+    </form>
+  </div>
+
+  {% if categories %}
+  <div class="card-footer bg-transparent border-top pt-2 pb-3">
+    <p class="small fw-semibold text-muted mb-2" style="font-size:0.72rem;letter-spacing:0.06em;text-transform:uppercase;">
+      Accès rapide
+    </p>
+    <div class="d-flex flex-wrap gap-1">
+      {% for cat in categories %}
+      <a href="{% url 'procedures:list' %}?category={{ cat.id }}"
+         class="badge-category text-decoration-none">
+        <i class="{{ cat.icon }}"></i>{{ cat.name }}
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+</div>

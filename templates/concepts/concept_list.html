@@ -1,0 +1,198 @@
+{% extends 'base.html' %}
+
+{% block title %}Concepts Réseau — NetOps Pro Hub{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+
+  <!-- Header -->
+  <div class="page-header d-flex align-items-center justify-content-between flex-wrap gap-2 mb-4">
+    <div>
+      <h1 class="page-title">
+        <i class="bi bi-mortarboard me-2 text-primary"></i>Concepts Réseau
+      </h1>
+      <p class="text-muted mb-0 small mt-1">
+        Les notions réseau expliquées simplement — comme à un enfant de 10 ans.
+        {% if total %}
+          <strong class="text-dark ms-1">{{ total }}</strong> concept{{ total|pluralize }} disponible{{ total|pluralize }}.
+        {% endif %}
+      </p>
+    </div>
+  </div>
+
+  <div class="row g-4">
+
+    <!-- Sidebar filtres -->
+    <div class="col-lg-3">
+      <div class="sticky-top" style="top:78px;">
+        <div class="card shadow-sm">
+          <div class="card-header bg-transparent border-0 pt-3 pb-2">
+            <h6 class="fw-semibold mb-0"><i class="bi bi-funnel me-2 text-primary"></i>Filtres</h6>
+          </div>
+          <div class="card-body pt-1">
+
+            <!-- Recherche -->
+            <form method="get" action="" id="filterForm">
+              <div class="mb-3">
+                <label class="form-label small fw-medium text-muted">Recherche</label>
+                <div class="input-group input-group-sm">
+                  <span class="input-group-text bg-transparent"><i class="bi bi-search text-muted"></i></span>
+                  <input type="text" name="q" class="form-control"
+                         placeholder="Chercher un concept..."
+                         value="{{ search_query }}">
+                </div>
+              </div>
+
+              <!-- Niveau -->
+              <div class="mb-3">
+                <label class="form-label small fw-medium text-muted">Niveau</label>
+                <select name="level" class="form-select form-select-sm" onchange="this.form.submit()">
+                  <option value="">Tous les niveaux</option>
+                  {% for val, label in levels %}
+                  <option value="{{ val }}" {% if current_level == val %}selected{% endif %}>{{ label }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <!-- Module -->
+              <div class="mb-3">
+                <label class="form-label small fw-medium text-muted">Module</label>
+                <select name="module" class="form-select form-select-sm" onchange="this.form.submit()">
+                  <option value="">Tous les modules</option>
+                  {% for m in modules %}
+                  <option value="{{ m.module_number }}" {% if current_module == m.module_number|stringformat:"s" %}selected{% endif %}>
+                    Module {{ m.module_number }} — {{ m.module_name }}
+                  </option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <button type="submit" class="btn btn-primary btn-sm w-100">
+                <i class="bi bi-search me-1"></i>Rechercher
+              </button>
+              {% if search_query or current_level or current_module %}
+              <a href="{% url 'concepts:list' %}" class="btn btn-outline-secondary btn-sm w-100 mt-2">
+                <i class="bi bi-x-circle me-1"></i>Réinitialiser
+              </a>
+              {% endif %}
+            </form>
+
+          </div>
+        </div>
+
+        <!-- Légende niveaux -->
+        <div class="card shadow-sm mt-3">
+          <div class="card-body py-3">
+            <p class="small fw-semibold text-muted mb-2">Niveaux</p>
+            <div class="d-flex flex-column gap-2">
+              <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-success-subtle text-success border border-success-subtle">Base</span>
+                <span class="text-muted" style="font-size:.75rem;">Concepts fondamentaux</span>
+              </div>
+              <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-warning-subtle text-warning border border-warning-subtle">Intermédiaire</span>
+                <span class="text-muted" style="font-size:.75rem;">Organisation & services</span>
+              </div>
+              <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-danger-subtle text-danger border border-danger-subtle">Avancé</span>
+                <span class="text-muted" style="font-size:.75rem;">CCNP / Entreprise</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Grille de concepts -->
+    <div class="col-lg-9">
+
+      {% if concepts %}
+
+      <!-- Groupement par module -->
+      {% regroup concepts by module_name as module_groups %}
+      {% for group in module_groups %}
+      <div class="mb-4">
+        <div class="section-header mb-3">
+          <h2 class="section-title" style="font-size:1rem;">
+            <i class="bi bi-collection me-2 text-primary"></i>
+            Module {{ group.list.0.module_number }} — {{ group.grouper }}
+          </h2>
+          <span class="badge bg-primary-subtle text-primary">{{ group.list|length }} concept{{ group.list|length|pluralize }}</span>
+        </div>
+
+        <div class="row g-3">
+          {% for concept in group.list %}
+          <div class="col-md-6 col-xl-4">
+            <a href="{{ concept.get_absolute_url }}" class="text-decoration-none">
+              <div class="card shadow-sm h-100 concept-card">
+                <div class="card-body">
+                  <div class="d-flex align-items-start justify-content-between mb-2">
+                    <div class="concept-icon-wrap bg-primary-subtle text-primary">
+                      <i class="bi {{ concept.icon }}"></i>
+                    </div>
+                    <span class="badge bg-{{ concept.level_color }}-subtle text-{{ concept.level_color }} border border-{{ concept.level_color }}-subtle"
+                          style="font-size:.68rem;">
+                      {{ concept.level_label }}
+                    </span>
+                  </div>
+                  <h6 class="fw-semibold text-dark mb-1 lh-sm">{{ concept.title }}</h6>
+                  <p class="text-muted mb-0" style="font-size:.8rem;line-height:1.4;">{{ concept.summary }}</p>
+                </div>
+                <div class="card-footer bg-transparent border-0 pt-0 pb-3 px-3">
+                  <span class="text-muted" style="font-size:.7rem;">
+                    <i class="bi bi-mortarboard me-1"></i>Module {{ concept.module_number }}
+                  </span>
+                </div>
+              </div>
+            </a>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endfor %}
+
+      {% if is_paginated %}
+      <nav class="mt-4" aria-label="Pagination">
+        <ul class="pagination justify-content-center mb-0">
+          {% if page_obj.has_previous %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% if current_level %}&level={{ current_level }}{% endif %}{% if current_module %}&module={{ current_module }}{% endif %}">
+              <i class="bi bi-chevron-left"></i>
+            </a>
+          </li>
+          {% endif %}
+          {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+            <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+            <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+            {% endif %}
+          {% endfor %}
+          {% if page_obj.has_next %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% if current_level %}&level={{ current_level }}{% endif %}{% if current_module %}&module={{ current_module }}{% endif %}">
+              <i class="bi bi-chevron-right"></i>
+            </a>
+          </li>
+          {% endif %}
+        </ul>
+      </nav>
+      {% endif %}
+
+      {% else %}
+      <div class="card shadow-sm">
+        <div class="card-body text-center py-5">
+          <i class="bi bi-mortarboard display-3 text-muted d-block mb-3 opacity-50"></i>
+          <h5 class="text-muted fw-normal">Aucun concept trouvé</h5>
+          <p class="text-muted small">Modifiez vos critères ou réinitialisez les filtres.</p>
+          <a href="{% url 'concepts:list' %}" class="btn btn-outline-primary btn-sm mt-1">
+            <i class="bi bi-x-circle me-1"></i>Réinitialiser les filtres
+          </a>
+        </div>
+      </div>
+      {% endif %}
+
+    </div>
+  </div>
+</div>
+{% endblock %}

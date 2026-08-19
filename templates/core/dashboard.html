@@ -1,0 +1,261 @@
+{% extends 'base.html' %}
+{% load netops_tags %}
+
+{% block title %}Dashboard — NetOps Pro Hub{% endblock %}
+
+{% block content %}
+
+<!-- Hero -->
+<div class="hero-banner py-4">
+  <div class="container-fluid px-4">
+    <div class="row align-items-center g-3">
+      <div class="col-lg-7">
+        <div class="d-flex align-items-center gap-2 mb-2">
+          <span class="badge bg-primary-subtle text-primary border border-primary-subtle" style="font-size:0.72rem;">
+            <i class="bi bi-circle-fill me-1" style="font-size:0.5rem;"></i>OPÉRATIONNEL
+          </span>
+        </div>
+        <h1 class="hero-title mb-2">NetOps Pro Hub</h1>
+        <p class="hero-sub mb-3">
+          Base de connaissances centralisée pour les procédures réseau et sécurité.
+          Consultez, générez et déployez vos configurations Cisco en toute confiance.
+        </p>
+        <div class="d-flex gap-2 flex-wrap">
+          <a href="{% url 'procedures:list' %}" class="btn btn-primary px-4">
+            <i class="bi bi-collection me-2"></i>Parcourir le catalogue
+          </a>
+          <a href="{% url 'procedures:list' %}?category=5" class="btn btn-outline-light px-4">
+            <i class="bi bi-bug me-2"></i>Troubleshooting
+          </a>
+        </div>
+      </div>
+      <div class="col-lg-5 d-none d-lg-flex justify-content-end align-items-center">
+        <div class="d-flex gap-3 opacity-60">
+          <i class="bi bi-hdd-network" style="font-size:5rem; color:rgba(37,99,235,0.4);"></i>
+          <i class="bi bi-diagram-3" style="font-size:5rem; color:rgba(99,102,241,0.3);"></i>
+          <i class="bi bi-shield-check" style="font-size:5rem; color:rgba(37,99,235,0.2);"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Content -->
+<div class="container-fluid px-4 py-4">
+
+  <!-- KPIs -->
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-xl-3">
+      <div class="card stat-card shadow-sm h-100">
+        <div class="card-body">
+          <div class="d-flex align-items-center justify-content-between">
+            <div>
+              <div class="stat-value">{{ total_procedures }}</div>
+              <div class="stat-label">Procédures publiées</div>
+            </div>
+            <div class="stat-icon bg-primary-subtle text-primary">
+              <i class="bi bi-file-earmark-code"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-xl-3">
+      <div class="card stat-card shadow-sm h-100">
+        <div class="card-body">
+          <div class="d-flex align-items-center justify-content-between">
+            <div>
+              <div class="stat-value">{{ total_categories }}</div>
+              <div class="stat-label">Catégories</div>
+            </div>
+            <div class="stat-icon bg-success-subtle text-success">
+              <i class="bi bi-grid-3x3-gap"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-xl-3">
+      <div class="card stat-card shadow-sm h-100">
+        <div class="card-body">
+          <div class="d-flex align-items-center justify-content-between">
+            <div>
+              <div class="stat-value">{{ vendor_counts|length }}</div>
+              <div class="stat-label">Vendors couverts</div>
+            </div>
+            <div class="stat-icon bg-warning-subtle text-warning">
+              <i class="bi bi-building"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-xl-3">
+      <div class="card stat-card shadow-sm h-100">
+        <div class="card-body">
+          <div class="d-flex align-items-center justify-content-between">
+            <div>
+              <div class="stat-value">{{ featured_procedures|length }}</div>
+              <div class="stat-label">Procédures mises en avant</div>
+            </div>
+            <div class="stat-icon bg-info-subtle text-info">
+              <i class="bi bi-star"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4">
+
+    <!-- Colonne principale -->
+    <div class="col-xl-8">
+
+      <!-- Procédures mises en avant -->
+      <div class="section-header mb-3">
+        <h2 class="section-title">
+          <i class="bi bi-star-fill text-warning me-2"></i>Procédures mises en avant
+        </h2>
+        <a href="{% url 'procedures:list' %}" class="btn btn-sm btn-outline-primary">
+          Voir tout <i class="bi bi-arrow-right ms-1"></i>
+        </a>
+      </div>
+
+      {% if featured_procedures %}
+      <div class="row g-3 mb-4">
+        {% for proc in featured_procedures %}
+        <div class="col-md-6">
+          {% include 'partials/_procedure_card.html' with procedure=proc %}
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="card shadow-sm mb-4">
+        <div class="card-body text-center py-5">
+          <i class="bi bi-collection display-4 text-muted d-block mb-3"></i>
+          <p class="text-muted mb-3">Aucune procédure mise en avant.</p>
+          {% if user.is_authenticated %}
+          <a href="/admin/procedures/procedure/" class="btn btn-sm btn-primary">
+            <i class="bi bi-pencil me-1"></i>Gérer les procédures
+          </a>
+          {% endif %}
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Quick access Cisco essentials -->
+      <div class="section-header mb-3">
+        <h2 class="section-title">
+          <i class="bi bi-lightning-charge me-2 text-primary"></i>Accès rapide
+        </h2>
+      </div>
+      <div class="row g-2 mb-4">
+        {% for cat in categories %}
+        <div class="col-md-6 col-lg-4">
+          <a href="{% url 'procedures:list' %}?category={{ cat.id }}"
+             class="quick-action text-decoration-none">
+            <div class="quick-action-icon bg-primary-subtle text-primary">
+              <i class="bi {{ cat.icon }}"></i>
+            </div>
+            <div>
+              <div class="fw-semibold small text-dark">{{ cat.name }}</div>
+              <div class="text-muted" style="font-size:0.75rem;">{{ cat.description|truncatechars:40 }}</div>
+            </div>
+          </a>
+        </div>
+        {% endfor %}
+      </div>
+
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-xl-4">
+
+      <!-- Procédures récentes -->
+      <div class="card shadow-sm mb-3">
+        <div class="card-header bg-transparent border-0 pt-3 pb-0">
+          <h6 class="fw-semibold mb-0">
+            <i class="bi bi-clock-history me-2 text-primary"></i>Récemment ajoutées
+          </h6>
+        </div>
+        <div class="card-body p-0">
+          <ul class="list-group list-group-flush">
+            {% for proc in recent_procedures %}
+            <li class="list-group-item border-0 px-3 py-2">
+              <a href="{{ proc.get_absolute_url }}" class="text-decoration-none d-flex align-items-start gap-2">
+                <div class="mt-1 flex-shrink-0" style="color:var(--nb-accent);">
+                  <i class="bi {{ proc.vendor|vendor_icon }}"></i>
+                </div>
+                <div class="min-w-0 flex-grow-1">
+                  <div class="fw-medium text-dark lh-sm small">{{ proc.title }}</div>
+                  <div class="d-flex align-items-center gap-2 mt-1">
+                    <span class="text-muted" style="font-size:0.7rem;">{{ proc.created_at|date:"d/m/Y" }}</span>
+                    <span class="criticality-chip criticality-{{ proc.criticality }}" style="font-size:0.65rem;padding:1px 5px;">
+                      {{ proc.get_criticality_display }}
+                    </span>
+                  </div>
+                </div>
+              </a>
+            </li>
+            {% empty %}
+            <li class="list-group-item border-0 text-muted small px-3 py-3">Aucune procédure.</li>
+            {% endfor %}
+          </ul>
+        </div>
+        {% if recent_procedures %}
+        <div class="card-footer bg-transparent border-0 py-2 px-3">
+          <a href="{% url 'procedures:list' %}" class="text-primary small text-decoration-none">
+            Voir toutes les procédures <i class="bi bi-arrow-right ms-1"></i>
+          </a>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Catégories -->
+      <div class="card shadow-sm mb-3">
+        <div class="card-header bg-transparent border-0 pt-3 pb-0">
+          <h6 class="fw-semibold mb-0">
+            <i class="bi bi-grid me-2 text-primary"></i>Catégories
+          </h6>
+        </div>
+        <div class="card-body pt-2">
+          <div class="d-flex flex-wrap gap-2">
+            {% for cat in categories %}
+            <a href="{% url 'procedures:list' %}?category={{ cat.id }}"
+               class="badge-category text-decoration-none">
+              <i class="{{ cat.icon }}"></i>{{ cat.name }}
+            </a>
+            {% empty %}
+            <span class="text-muted small">Aucune catégorie.</span>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Vendors -->
+      {% if vendor_counts %}
+      <div class="card shadow-sm">
+        <div class="card-header bg-transparent border-0 pt-3 pb-0">
+          <h6 class="fw-semibold mb-0">
+            <i class="bi bi-bar-chart me-2 text-primary"></i>Répartition vendors
+          </h6>
+        </div>
+        <div class="card-body pt-2 pb-2">
+          {% for vc in vendor_counts %}
+          <div class="d-flex align-items-center justify-content-between py-1 {% if not forloop.last %}border-bottom{% endif %}">
+            <div class="d-flex align-items-center gap-2">
+              <i class="bi {{ vc.vendor|vendor_icon }} text-primary" style="font-size:0.85rem;"></i>
+              <span class="text-capitalize fw-medium small">{{ vc.vendor }}</span>
+            </div>
+            <span class="badge bg-primary-subtle text-primary fw-semibold">{{ vc.total }}</span>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+    </div>
+  </div>
+</div>
+{% endblock %}
