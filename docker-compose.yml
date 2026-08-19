@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15
+    container_name: netops_postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: netops_db
+      POSTGRES_USER: netops_user
+      POSTGRES_PASSWORD: netops_password
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+
+  web:
+    build: .
+    container_name: netops_django
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgres://netops_user:netops_password@db/netops_db
+      - DEBUG=1
+    depends_on:
+      - db
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
