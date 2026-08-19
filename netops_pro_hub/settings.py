@@ -60,9 +60,9 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': os.environ.get('DB_NAME', 'netops_db'),
-        'USER': os.environ.get('DB_USER', 'netops_user'),
-        'PASSWORD': os.environ.get('DB_PASSWORD', 'netops_password'),
-        'HOST': os.environ.get('DB_HOST', 'db'),
+        'USER': os.environ.get('DB_USER', 'postgres'),
+        'PASSWORD': os.environ.get('DB_PASSWORD', 'amel1942'),
+        'HOST': os.environ.get('DB_HOST', '172.17.0.1'),   # ← ici, on met l'IP du bridge par défaut
         'PORT': os.environ.get('DB_PORT', '5432'),
     }
 }
