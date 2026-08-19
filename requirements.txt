@@ -3,3 +3,4 @@ django-crispy-forms>=2.3
 crispy-bootstrap5>=2024.2
 Pillow>=10.3
 bleach>=6.0
+psycopg2-binary
