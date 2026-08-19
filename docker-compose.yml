@@ -20,7 +20,7 @@ services:
     volumes:
       - .:/app
     ports:
-      - "8000:8000"
+      - "8001:8000"
     environment:
       - DATABASE_URL=postgres://netops_user:netops_password@db/netops_db
       - DEBUG=1
